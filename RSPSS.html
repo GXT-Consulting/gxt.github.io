@@ -1,0 +1,188 @@
+!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8' />
+    <title>RSPSS Locations</title>
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+    <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.42.2/mapbox-gl.js'></script>
+    <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.42.2/mapbox-gl.css' rel='stylesheet' />
+	<link href='https://mapbox.com/base/latest/base.css' rel='stylesheet' />
+    <style>
+        body { margin:0; padding:0; }
+        #map { position:absolute; top:0; bottom:0; width:100%; }
+    </style>
+</head>
+<body>
+
+<style>
+.map-overlay {
+    position: absolute;
+	left: 2px;
+    top: 2px;
+	background-color: #fff;
+    box-shadow:0 1px 2px rgba(0, 0, 0, 0.10);
+    border-radius: 3px;
+    padding: 5px;
+    margin-bottom: 5px;
+}
+
+
+.mapboxgl-popup {
+        max-width: 400px;
+        font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
+}
+
+
+</style>
+
+
+<div id='map'></div>
+
+<div class='map-overlay top'>
+	<div id='menu' class='rounded-toggle inline'>
+	  <input id='cjairogkda5nm2sqvdza4oukd' type='radio' name='rtoggle' value='Imagery' checked='checked'>
+	  <label for='cjairogkda5nm2sqvdza4oukd'>Imagery</label>
+	  <input id='cja4l5n2h2q8x2sui23g4mrud' type='radio' name='rtoggle' value='Streets'>
+	  <label for='cja4l5n2h2q8x2sui23g4mrud'>Streets</label>
+	</div>
+	
+</div>
+
+
+<script>
+mapboxgl.accessToken = 'pk.eyJ1Ijoia2FydGVtYW5uIiwiYSI6ImNqYTQ0aXE0eTJ3dWMzMnBvZmRlemUzNDcifQ.kKZv18LnLMbmlF_hHboBQQ';
+var map = new mapboxgl.Map({
+    container: 'map', // container id
+    style: 'mapbox://styles/kartemann/cjairogkda5nm2sqvdza4oukd', // stylelocation
+    center: [-114.50, 45.5], // starting position [lng, lat]
+    zoom: 5 // starting zoom
+});
+
+
+//change basemap
+var layerList = document.getElementById('menu');
+var inputs = layerList.getElementsByTagName('input');
+
+function switchLayer(layer) {
+    var layerId = layer.target.id;
+    map.setStyle('mapbox://styles/kartemann/' + layerId);
+}
+
+for (var i = 0; i < inputs.length; i++) {
+    inputs[i].onclick = switchLayer;
+}
+
+
+
+
+//hover popup below
+map.on('mouseenter','facilities', function(e) {
+ //get the spatial features where your mouse is currently located. 
+ //note we use the pixel location (e.point) and not lat/lon here.
+ //also specify the feature we want to pay attention 
+ var features = map.queryRenderedFeatures(e.point, {
+ layers: ['facilities']
+ });
+ if (!features.length) {
+ return;
+ }
+
+ popup1 = new mapboxgl.Popup({
+ closeButton: true,
+ closeOnClick: true
+ });
+
+ //set up popups when hover
+  
+ //set the location of our popup to the 
+ //lnglat of our click (note we use e.lnglat here and NOT e.point)
+ popup1.setLngLat(e.lngLat);
+ //set poup content
+ popup1.setHTML(
+ //"<b>" + features[0].properties.Name + "</b>" 
+ "<b>" + features[0].properties.Name + "</b>"
+ //"<br>RSPSS: " + features[0].properties.City +" "
+   
+ );
+ //finally add the popup to the map
+ popup1.addTo(map);
+ });
+
+ map.on('mouseleave', 'facilities', function() {
+        map.getCanvas().style.cursor = '';
+        popup1.remove();
+    });
+
+
+
+
+//click popup stuff below
+//an event where when there is a mouse click, 
+//send the event data (represented by e) to a 
+//function that does something
+
+map.on('click', function(e) {
+ //get the spatial features where your mouse is currently located. 
+ //note we use the pixel location (e.point) and not lat/lon here.
+ //also specify the feature we want to pay attention 
+ var features = map.queryRenderedFeatures(e.point, {
+ layers: ['facilities']
+ });
+ if (!features.length) {
+ return;
+ }
+
+ popup = new mapboxgl.Popup({
+ closeButton: true,
+ closeOnClick: true
+ });
+
+ //set up popups when clicked 
+  
+ //set the location of our popup to the 
+ //lnglat of our click (note we use e.lnglat here and NOT e.point)
+ popup.setLngLat(e.lngLat);
+ //set poup content
+ popup.setHTML(
+ "<b>" + features[0].properties.Name + "</b>" +
+ //"<br>"+ features[0].properties.Street +"<br>"+ features[0].properties.City + ", "+ features[0].properties.State + "<br>"+"<a href=\""+ features[0].properties.StreetViewURL +"\"target=\"_blank\">Google Street View</a>"  + " " 
+ "<br>"+ features[0].properties.Street +"<br>"+ features[0].properties.City + ", "+ features[0].properties.State + "<br>"+"<a href=\""+ features[0].properties.StreetViewURL +"\"target=\"_blank\">Google Street View</a>"  +  "<br>"+"<a href=\""+ features[0].properties.SitePhotoURL +"\"target=\"_blank\">Photos</a>"  +"  " 
+
+ //"<br>"+ features[0].properties.Street +"<br>"+ features[0].properties.City + ", "+ features[0].properties.State +" "  
+ );
+ //add the popup to the map
+ popup.addTo(map);
+ map.panTo(e.lngLat);
+ });
+
+ 
+//When the mouse moves over a spatial layer change the mouse cursor
+map.on("mousemove", function(e) {
+ //get the province feature underneath the mouse
+ var features = map.queryRenderedFeatures(e.point, {
+ layers: ["facilities"]
+ });
+ //if there's a point under our mouse, then do the following.
+ if (features.length > 0) {
+ //use the following code to change the 
+ //cursor to a pointer ('pointer') instead of the default ('')
+ map.getCanvas().style.cursor = (features[0].properties.Name !== null) ? 'pointer' : '';
+ }
+ //if there are no points under our mouse, 
+ //then change the cursor back to the default
+ else {
+ map.getCanvas().style.cursor = '';
+ }
+ map.on('mouseleave', 'facilities', function() {
+    map.getCanvas().style.cursor = '';
+    //popup.remove();
+    });
+ 
+});
+
+
+
+</script>
+
+</body>
+</html>
